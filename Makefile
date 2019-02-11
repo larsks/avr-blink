@@ -4,8 +4,7 @@ FUSE_LOW   = 0x64
 FUSE_HIGH  = 0xdf
 FUSE_EXT   = 0xff
 FUSES      = -U lfuse:w:$(FUSE_LOW):m -U hfuse:w:$(FUSE_HIGH):m -U efuse:w:$(FUSE_EXT):m
-AVR_PORT   = /dev/ttyACM0
-PORT       = -P $(AVR_PORT)
+PORT       = -P /dev/ttyACM0
 PROGRAMMER = -c arduino
 AVRDUDE    = avrdude
 CC         = avr-gcc
@@ -34,17 +33,16 @@ all: blink.hex
 %.hex: %.elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
 
-
-flash:	$(PROGNAME).hex
+%.flash: %.hex
 	$(AVRDUDE) -U flash:w:$<:i
+	date > $@
+
+%.clean:
+	rm -f $(@:.clean=.hex) $(@:.clean=.elf) \
+		$(@:.clean=.o) $(@:.clean=.s) $(@:.clean=.lst)
 
 fuse:
 	$(AVRDUDE) $(FUSES)
 
 boardinfo:
 	$(AVRDUDE)
-
-make: flash fuse
-
-clean:
-	rm -f $(PROGNAME).o $(PROGNAME).elf $(PROGNAME).hex
